@@ -18,8 +18,11 @@ except Exception:
     groq_api_key = os.getenv("GROQ_API_KEY")
 
 if not groq_api_key:
-    st.error("GROQ_API_KEY is not set. Please check your .env file.")
+    st.error("GROQ_API_KEY is not set. Please check your secrets.toml or .env file.")
     st.stop()
+
+# Optional: Don't log the key, but confirm it's loaded
+# st.write("Groq API key loaded successfully.")  # Uncomment only for debugging
 
 client = Groq(api_key=groq_api_key)
 
@@ -37,7 +40,7 @@ lang_code_map = {
 def translate_text(text, target_language):
     prompt = f"Translate the following text to {target_language}:\n\n{text}"
     try:
-        response = client.chat.completions.create(
+        response = client.chat.completions().create(
             model="llama3-70b-8192",  # ✅ Updated model here
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
@@ -76,10 +79,12 @@ def extract_text_from_file(uploaded_file):
         elif file_type == "xlsx":
             df = pd.read_excel(uploaded_file)
             return df.to_string(index=False)
-    except Exception as e:
-        return f"Error reading file: {e}"
 
-    return "Unsupported file format."
+        else:
+            raise ValueError("Unsupported file format.")
+
+    except Exception as e:
+        raise RuntimeError(f"Error reading file: {e}")
 
 
 # ---------- UI ----------
